@@ -1,0 +1,28 @@
+-- Jumlah baris tiap tabel
+SELECT 'kf_final_transaction' AS tabel, COUNT(*) AS baris FROM `rakamin-kf-analytics-511411.kimia_farma.kf_final_transaction`
+UNION ALL SELECT 'kf_inventory',     COUNT(*) FROM `rakamin-kf-analytics-511411.kimia_farma.kf_inventory`
+UNION ALL SELECT 'kf_kantor_cabang', COUNT(*) FROM `rakamin-kf-analytics-511411.kimia_farma.kf_kantor_cabang`
+UNION ALL SELECT 'kf_product',       COUNT(*) FROM `rakamin-kf-analytics-511411.kimia_farma.kf_product`;
+ 
+-- Tipe data kolom transaksi
+SELECT column_name, data_type
+FROM `rakamin-kf-analytics-511411.kimia_farma.INFORMATION_SCHEMA.COLUMNS`
+WHERE table_name = 'kf_final_transaction';
+ 
+-- Skala diskon
+SELECT MIN(discount_percentage) AS min_diskon, MAX(discount_percentage) AS max_diskon
+FROM `rakamin-kf-analytics-511411.kimia_farma.kf_final_transaction`;
+ 
+-- Cek duplikat transaction_id. Harapan: 0 baris
+SELECT transaction_id, COUNT(*) AS jumlah
+FROM `rakamin-kf-analytics-511411.kimia_farma.kf_final_transaction`
+GROUP BY transaction_id HAVING COUNT(*) > 1;
+ 
+-- Cek relasi antar tabel. Harapan: keduanya 0
+SELECT
+  COUNTIF(c.branch_id  IS NULL) AS transaksi_tanpa_cabang,
+  COUNTIF(p.product_id IS NULL) AS transaksi_tanpa_produk
+FROM `rakamin-kf-analytics-511411.kimia_farma.kf_final_transaction` t
+LEFT JOIN `rakamin-kf-analytics-511411.kimia_farma.kf_kantor_cabang` c ON t.branch_id  = c.branch_id
+LEFT JOIN `rakamin-kf-analytics-511411.kimia_farma.kf_product`       p ON t.product_id = p.product_id;
+ 
