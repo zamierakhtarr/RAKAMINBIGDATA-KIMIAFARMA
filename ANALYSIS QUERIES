@@ -1,0 +1,45 @@
+-- Kinerja per tahun
+SELECT EXTRACT(YEAR FROM date) AS tahun, COUNT(transaction_id) AS total_transaksi,
+       ROUND(SUM(nett_sales)) AS nett_sales, ROUND(SUM(nett_profit)) AS nett_profit,
+       ROUND(AVG(rating_transaksi),3) AS avg_rating_transaksi
+FROM `rakamin-kf-analytics-511411.kimia_farma.kf_analisa` GROUP BY tahun ORDER BY tahun;
+ 
+-- Top 10 provinsi: total transaksi
+SELECT provinsi, COUNT(transaction_id) AS total_transaksi
+FROM `rakamin-kf-analytics-511411.kimia_farma.kf_analisa` GROUP BY provinsi ORDER BY total_transaksi DESC LIMIT 10;
+ 
+-- Top 10 provinsi: nett sales
+SELECT provinsi, ROUND(SUM(nett_sales)) AS total_nett_sales
+FROM `rakamin-kf-analytics-511411.kimia_farma.kf_analisa` GROUP BY provinsi ORDER BY total_nett_sales DESC LIMIT 10;
+ 
+-- Top 5 cabang: rating cabang tertinggi, rating transaksi terendah
+SELECT branch_id, branch_name, kota, provinsi,
+       MAX(rating_cabang) AS rating_cabang,
+       ROUND(AVG(rating_transaksi),3) AS avg_rating_transaksi,
+       COUNT(*) AS jumlah_transaksi
+FROM `rakamin-kf-analytics-511411.kimia_farma.kf_analisa`
+GROUP BY branch_id, branch_name, kota, provinsi
+ORDER BY rating_cabang DESC, avg_rating_transaksi ASC LIMIT 5;
+ 
+-- Total profit per provinsi (geo map)
+SELECT provinsi, ROUND(SUM(nett_profit)) AS total_profit
+FROM `rakamin-kf-analytics-511411.kimia_farma.kf_analisa` GROUP BY provinsi ORDER BY total_profit DESC;
+ 
+-- Kontribusi kategori produk
+SELECT product_category, ANY_VALUE(product_name) AS contoh_nama,
+       COUNT(*) AS transaksi, ROUND(SUM(nett_sales)) AS nett_sales, ROUND(SUM(nett_profit)) AS nett_profit
+FROM `rakamin-kf-analytics-511411.kimia_farma.kf_analisa` GROUP BY product_category ORDER BY nett_sales DESC;
+ 
+-- Top 10 produk
+SELECT product_id, product_category, COUNT(*) AS transaksi, ROUND(SUM(nett_profit)) AS nett_profit
+FROM `rakamin-kf-analytics-511411.kimia_farma.kf_analisa` GROUP BY product_id, product_category ORDER BY nett_profit DESC LIMIT 10;
+ 
+-- Kinerja per kategori cabang
+SELECT branch_category, COUNT(DISTINCT branch_id) AS jumlah_cabang, COUNT(*) AS transaksi,
+       ROUND(SUM(nett_sales)) AS nett_sales, ROUND(SUM(nett_profit)) AS nett_profit
+FROM `rakamin-kf-analytics-511411.kimia_farma.kf_analisa` GROUP BY branch_category ORDER BY nett_sales DESC;
+ 
+-- Stok vs transaksi per provinsi (memakai kf_inventory)
+SELECT c.provinsi, SUM(i.opname_stock) AS total_stok
+FROM `rakamin-kf-analytics-511411.kimia_farma.kf_inventory` i JOIN `rakamin-kf-analytics-511411.kimia_farma.kf_kantor_cabang` c ON i.branch_id = c.branch_id
+GROUP BY c.provinsi ORDER BY total_stok DESC;
